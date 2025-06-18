@@ -74,8 +74,9 @@
 
 local snd = playdate.sound
 local gfx = playdate.graphics
+import "CoreLibs/crank"
 
-s = snd.sequence.new('giveyouup.mid')
+seq = snd.sequence.new('giveyouup.mid')
 
 local synth = snd.synth.new(snd.kWaveSawtooth)
 synth:setVolume(0.2)
@@ -121,13 +122,13 @@ function druminst()
 	return inst
 end
 
-local ntracks = s:getTrackCount()
+local ntracks = seq:getTrackCount()
 local active = {}
 local poly = 0
 local tracks = {}
 
 for i=1,ntracks do
-	local track = s:getTrackAtIndex(i)
+	local track = seq:getTrackAtIndex(i)
 	if track ~= nil then
 		local n = track:getPolyphony(i)
 		if n > 0 then active[#active+1] = i end
@@ -142,14 +143,23 @@ for i=1,ntracks do
 	end
 end
 
-s:play()
+-- seq:play()
 
 function playdate.update()
 	gfx.clear(gfx.kColorWhite)
 	gfx.setColor(gfx.kColorBlack)
+
+	local ticks = math.abs(playdate.getCrankTicks(360))
+	print("ticks: "..ticks) -- TODO: Remove print
+	if ticks < 1 then
+		seq:stop()
+	else
+		seq.setTempo(seq, ticks * 50)
+		seq:play()
+	end
 	
 	for i=1,#active do
-		local track = s:getTrackAtIndex(i)
+		local track = seq:getTrackAtIndex(i)
 		local n = track:getNotesActive(active[i])
 		gfx.fillRect(400*(i-1)/#active, 240*(1-n/poly), 400/#active, 240)
 	end
